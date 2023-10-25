@@ -23,7 +23,14 @@ public sealed class Panel : Renderable, IHasBoxBorder, IHasBorder, IExpandable, 
     /// fit the available space. If <c>false</c>, the panel width will be
     /// auto calculated. Defaults to <c>false</c>.
     /// </summary>
-    public bool Expand { get; set; }
+    public bool Expand
+    {
+        get => ExpandWidth && ExpandHeight;
+        set => ExpandWidth = ExpandHeight = value;
+    }
+
+    public bool ExpandWidth { get; set; }
+    public bool ExpandHeight { get; set; }
 
     /// <summary>
     /// Gets or sets the padding.
@@ -108,7 +115,7 @@ public sealed class Panel : Renderable, IHasBoxBorder, IHasBorder, IExpandable, 
         var child = new Padder(_child, Padding);
         var width = Measure(options, maxWidth, child);
 
-        var panelWidth = Math.Min(!Expand ? width.Max : maxWidth, maxWidth);
+        var panelWidth = Math.Min(!ExpandWidth ? width.Max : maxWidth, maxWidth);
         var innerWidth = panelWidth - edgeWidth;
 
         var height = Height != null
@@ -117,7 +124,7 @@ public sealed class Panel : Renderable, IHasBoxBorder, IHasBorder, IExpandable, 
                 ? options.Height - 2
                 : null;
 
-        if (!Expand)
+        if (!ExpandHeight)
         {
             // Set the height to the explicit height (or null)
             // if the panel isn't expandable.
