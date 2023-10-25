@@ -49,11 +49,7 @@ internal sealed class DefaultProgressRenderer : ProgressRenderer
                     _live.Overflow = VerticalOverflow.Visible;
                     _console.Write(_live.Target);
                 }
-
-                _console.WriteLine();
             }
-
-            _console.Cursor.Show();
         }
     }
 
@@ -110,7 +106,7 @@ internal sealed class DefaultProgressRenderer : ProgressRenderer
 
             layout.AddRow(grid);
 
-            _live.SetRenderable(new Padder(_renderHook(layout, tasks), new Padding(0, 1)));
+            _live.SetRenderable(_renderHook(layout, tasks));
         }
     }
 
