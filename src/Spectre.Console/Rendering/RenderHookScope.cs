@@ -21,6 +21,8 @@ public sealed class RenderHookScope : IDisposable
         _console.Pipeline.Attach(_hook);
     }
 
+    public static RenderHookScope Attach(IAnsiConsole console, IRenderHook hook) => new(console, hook);
+
     /// <inheritdoc/>
     public void Dispose()
     {

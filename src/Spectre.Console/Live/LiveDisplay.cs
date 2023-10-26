@@ -24,6 +24,8 @@ public sealed class LiveDisplay
     /// Gets or sets the vertical overflow cropping strategy.
     /// </summary>
     public VerticalOverflowCropping Cropping { get; set; } = VerticalOverflowCropping.Top;
+    public bool AutoRefresh { get; set; }
+    public TimeSpan RefreshRate { get; set; } = TimeSpan.FromMilliseconds(100);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LiveDisplay"/> class.
@@ -107,9 +109,26 @@ public sealed class LiveDisplay
             {
                 using (new RenderHookScope(_console, renderer))
                 {
-                    var result = await func(context).ConfigureAwait(false);
-                    context.Refresh();
-                    return result;
+                    T result;
+
+                    if (AutoRefresh)
+                    {
+                        using (var thread = new AutoRefreshThread(context, RefreshRate))
+                        {
+                            result = await func(context).ConfigureAwait(false);
+                        }
+
+                        context.Refresh();
+
+                        return result;
+                    }
+                    else
+                    {
+                        result = await func(context).ConfigureAwait(false);
+                        context.Refresh();
+
+                        return result;
+                    }
                 }
             }
             finally

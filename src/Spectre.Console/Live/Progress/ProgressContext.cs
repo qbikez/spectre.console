@@ -3,7 +3,7 @@ namespace Spectre.Console;
 /// <summary>
 /// Represents a context that can be used to interact with a <see cref="Progress"/>.
 /// </summary>
-public sealed class ProgressContext
+public sealed class ProgressContext : IRefreshable
 {
     private readonly List<ProgressTask> _tasks;
     private readonly object _taskLock;
@@ -69,6 +69,8 @@ public sealed class ProgressContext
     public void Refresh()
     {
         _renderer.Update(this);
+        // writing an empty control code forces a refresh of Console Pipeline.
+        // Because we're attached to the pipeline, the whole renderer will be refreshed.
         _console.Write(new ControlCode(string.Empty));
     }
 

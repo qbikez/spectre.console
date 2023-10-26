@@ -3,7 +3,7 @@ namespace Spectre.Console;
 /// <summary>
 /// Represents a context that can be used to interact with a <see cref="LiveDisplay"/>.
 /// </summary>
-public sealed class LiveDisplayContext
+public sealed class LiveDisplayContext : IRefreshable
 {
     private readonly IAnsiConsole _console;
 
@@ -47,4 +47,9 @@ public sealed class LiveDisplayContext
         Live.Overflow = overflow;
         Live.OverflowCropping = cropping;
     }
+}
+
+public interface IRefreshable
+{
+    public void Refresh();
 }

@@ -62,52 +62,59 @@ internal sealed class DefaultProgressRenderer : ProgressRenderer
                 _stopwatch.Start();
             }
 
-            var renderContext = RenderOptions.Create(_console, _console.Profile.Capabilities);
-
             var delta = _stopwatch.Elapsed - _lastUpdate;
             _lastUpdate = _stopwatch.Elapsed;
 
-            var grid = new Grid();
-            for (var columnIndex = 0; columnIndex < _columns.Count; columnIndex++)
-            {
-                var column = new GridColumn().PadRight(1);
-
-                var columnWidth = _columns[columnIndex].GetColumnWidth(renderContext);
-                if (columnWidth != null)
-                {
-                    column.Width = columnWidth;
-                }
-
-                if (_columns[columnIndex].NoWrap)
-                {
-                    column.NoWrap();
-                }
-
-                // Last column?
-                if (columnIndex == _columns.Count - 1)
-                {
-                    column.PadRight(0);
-                }
-
-                grid.AddColumn(column);
-            }
-
-            // Add rows
             var tasks = context.GetTasks();
+            var layout = CreateGrid(tasks, delta);
+            var preprocessed = _renderHook(layout, tasks);
 
-            var layout = new Grid();
-            layout.AddColumn();
+            _live.SetRenderable(preprocessed);
+        }
+    }
 
-            foreach (var task in tasks.Where(tsk => !(_hideCompleted && tsk.IsFinished)))
+    private Grid CreateGrid(IReadOnlyList<ProgressTask> tasks, TimeSpan delta)
+    {
+        var renderContext = RenderOptions.Create(_console, _console.Profile.Capabilities);
+
+        var grid = new Grid();
+        for (var columnIndex = 0; columnIndex < _columns.Count; columnIndex++)
+        {
+            var column = new GridColumn().PadRight(1);
+
+            var columnWidth = _columns[columnIndex].GetColumnWidth(renderContext);
+            if (columnWidth != null)
             {
-                var columns = _columns.Select(column => column.Render(renderContext, task, delta));
-                grid.AddRow(columns.ToArray());
+                column.Width = columnWidth;
             }
 
-            layout.AddRow(grid);
+            if (_columns[columnIndex].NoWrap)
+            {
+                column.NoWrap();
+            }
 
-            _live.SetRenderable(_renderHook(layout, tasks));
+            // Last column?
+            if (columnIndex == _columns.Count - 1)
+            {
+                column.PadRight(0);
+            }
+
+            grid.AddColumn(column);
         }
+
+        // Add rows
+        var layout = new Grid();
+        layout.AddColumn();
+
+        foreach (var task in tasks.Where(tsk => !(_hideCompleted && tsk.IsFinished)))
+        {
+            var columns = _columns.Select(column => column.Render(renderContext, task, delta));
+            grid.AddRow(columns.ToArray());
+        }
+
+        layout.AddRow(grid);
+
+        return layout;
     }
 
     public override IEnumerable<IRenderable> Process(RenderOptions options, IEnumerable<IRenderable> renderables)

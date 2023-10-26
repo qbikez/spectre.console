@@ -24,7 +24,7 @@ public static class RenderableExtensions
         }
 
         var context = RenderOptions.Create(console, console.Profile.Capabilities);
-        var renderables = console.Pipeline.Process(context, new[] { renderable });
+        var renderables = console.Pipeline.Process(context, new[] { renderable }).ToList();
 
         return GetSegments(console, context, renderables);
     }

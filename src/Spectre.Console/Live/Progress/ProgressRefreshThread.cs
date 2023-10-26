@@ -1,14 +1,14 @@
 namespace Spectre.Console;
 
-internal sealed class ProgressRefreshThread : IDisposable
+internal sealed class AutoRefreshThread : IDisposable
 {
-    private readonly ProgressContext _context;
+    private readonly IRefreshable _context;
     private readonly TimeSpan _refreshRate;
     private readonly ManualResetEvent _running;
     private readonly ManualResetEvent _stopped;
     private readonly Thread? _thread;
 
-    public ProgressRefreshThread(ProgressContext context, TimeSpan refreshRate)
+    public AutoRefreshThread(IRefreshable context, TimeSpan refreshRate)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _refreshRate = refreshRate;

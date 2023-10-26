@@ -127,13 +127,14 @@ public sealed class Progress
 
             try
             {
-                using (new RenderHookScope(_console, renderer))
+                using (RenderHookScope.Attach(_console, renderer))
                 {
                     var context = new ProgressContext(_console, renderer);
 
                     if (AutoRefresh)
                     {
-                        using (var thread = new ProgressRefreshThread(context, renderer.RefreshRate))
+                        var refreshRate = TimeSpan.FromMilliseconds(100);
+                        using (var thread = new AutoRefreshThread(context, refreshRate))
                         {
                             result = await action(context).ConfigureAwait(false);
                         }
