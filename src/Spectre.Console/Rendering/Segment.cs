@@ -203,7 +203,7 @@ public class Segment
     /// <param name="maxWidth">The maximum width.</param>
     /// <param name="height">The height (if any).</param>
     /// <returns>A list of lines.</returns>
-    public static List<SegmentLine> SplitLines(IEnumerable<Segment> segments, int maxWidth, int? height = null)
+    public static List<SegmentLine> SplitLines(IEnumerable<Segment> segments, int maxWidth, int? height = null, VerticalOverflowCropping cropping = VerticalOverflowCropping.Bottom)
     {
         if (segments is null)
         {
@@ -295,13 +295,18 @@ public class Segment
             lines.Add(line);
         }
 
-        // Got a height specified?
         if (height != null)
         {
             if (lines.Count >= height)
             {
-                // Remove lines
-                lines.RemoveRange(height.Value, lines.Count - height.Value);
+                if (cropping == VerticalOverflowCropping.Top)
+                {
+                    lines.RemoveRange(0, lines.Count - height.Value);
+                }
+                else
+                {
+                    lines.RemoveRange(height.Value, lines.Count - height.Value);
+                }
             }
             else
             {

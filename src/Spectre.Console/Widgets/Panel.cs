@@ -12,6 +12,8 @@ public sealed class Panel : Renderable, IHasBoxBorder, IHasBorder, IExpandable, 
     /// <inheritdoc/>
     public BoxBorder Border { get; set; } = BoxBorder.Square;
 
+    public VerticalOverflowCropping Cropping { get; set; } = VerticalOverflowCropping.Top;
+
     /// <inheritdoc/>
     public bool UseSafeBorder { get; set; } = true;
 
@@ -151,7 +153,7 @@ public sealed class Panel : Renderable, IHasBoxBorder, IHasBorder, IExpandable, 
 
         // Split the child segments into lines.
         var childSegments = ((IRenderable)child).Render(options with { Height = height }, innerWidth);
-        foreach (var (_, _, last, line) in Segment.SplitLines(childSegments, innerWidth, height).Enumerate())
+        foreach (var (_, _, last, line) in Segment.SplitLines(childSegments, innerWidth, height, Cropping).Enumerate())
         {
             if (line.Count == 1 && line[0].IsWhiteSpace)
             {
