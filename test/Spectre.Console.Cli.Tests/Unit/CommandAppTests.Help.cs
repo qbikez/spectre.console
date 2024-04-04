@@ -4,7 +4,6 @@ namespace Spectre.Console.Tests.Unit.Cli;
 
 public sealed partial class CommandAppTests
 {
-    [UsesVerify]
     [ExpectationPath("Help")]
     public class Help
     {
@@ -24,6 +23,27 @@ public sealed partial class CommandAppTests
 
             // When
             var result = fixture.Run("--help");
+
+            // Then
+            return Verifier.Verify(result.Output);
+        }
+
+        [Fact]
+        [Expectation("Root_Command")]
+        public Task Should_Output_Root_Command_Correctly()
+        {
+            // Given
+            var fixture = new CommandAppTester();
+            fixture.Configure(configurator =>
+            {
+                configurator.SetApplicationName("myapp");
+                configurator.AddCommand<DogCommand>("dog");
+                configurator.AddCommand<HorseCommand>("horse");
+                configurator.AddCommand<GiraffeCommand>("giraffe");
+            });
+
+            // When
+            var result = fixture.Run("horse", "--help");
 
             // Then
             return Verifier.Verify(result.Output);
@@ -230,9 +250,43 @@ public sealed partial class CommandAppTests
             return Verifier.Verify(result.Output);
         }
 
-        [Fact]
+        [Theory]
+        [InlineData(null, "EN")]
+        [InlineData("", "EN")]
+        [InlineData("en", "EN")]
+        [InlineData("en-EN", "EN")]
+        [InlineData("fr", "FR")]
+        [InlineData("fr-FR", "FR")]
+        [InlineData("sv", "SV")]
+        [InlineData("sv-SE", "SV")]
+        [InlineData("de", "DE")]
+        [InlineData("de-DE", "DE")]
         [Expectation("Default_Without_Args_Additional")]
-        public Task Should_Output_Default_Command_And_Additional_Commands_When_Default_Command_Has_Required_Parameters_And_Is_Called_Without_Args()
+        public Task Should_Output_Default_Command_And_Additional_Commands_When_Default_Command_Has_Required_Parameters_And_Is_Called_Without_Args_Localised(string culture, string expectationPrefix)
+        {
+            // Given
+            var fixture = new CommandAppTester();
+            fixture.SetDefaultCommand<LionCommand>();
+            fixture.Configure(configurator =>
+            {
+                configurator.AddExample("20", "--alive");
+                configurator.SetApplicationCulture(string.IsNullOrEmpty(culture) ? null : new CultureInfo(culture));
+                configurator.SetApplicationName("myapp");
+                configurator.AddCommand<GiraffeCommand>("giraffe");
+            });
+
+            // When
+            var result = fixture.Run();
+
+            // Then
+            var settings = new VerifySettings();
+            settings.DisableRequireUniquePrefix();
+            return Verifier.Verify(result.Output, settings).UseTextForParameters(expectationPrefix);
+        }
+
+        [Fact]
+        [Expectation("Default_Without_Args_Additional_Style_Default")]
+        public Task Should_Output_Default_Command_And_Additional_Commands_When_Default_Command_Has_Required_Parameters_And_Is_Called_Without_Args_Style_Default()
         {
             // Given
             var fixture = new CommandAppTester();
@@ -240,7 +294,82 @@ public sealed partial class CommandAppTests
             fixture.Configure(configurator =>
             {
                 configurator.SetApplicationName("myapp");
+                configurator.AddExample("20", "--alive");
                 configurator.AddCommand<GiraffeCommand>("giraffe");
+                configurator.SetHelpProvider(new RenderMarkupHelpProvider(configurator.Settings));
+            });
+
+            // When
+            var result = fixture.Run();
+
+            // Then
+            return Verifier.Verify(result.Output);
+        }
+
+        [Fact]
+        [Expectation("Default_Without_Args_Additional_Style_BoldHeadings")]
+        public Task Should_Output_Default_Command_And_Additional_Commands_When_Default_Command_Has_Required_Parameters_And_Is_Called_Without_Args_Style_BoldHeadings()
+        {
+            // Bold headings in the help text
+            var styles = new HelpProviderStyle()
+            {
+                Description = new DescriptionStyle()
+                {
+                    Header = "bold",
+                },
+                Usage = new UsageStyle()
+                {
+                    Header = "bold",
+                },
+                Examples = new ExampleStyle()
+                {
+                    Header = "bold",
+                },
+                Arguments = new ArgumentStyle()
+                {
+                    Header = "bold",
+                },
+                Commands = new CommandStyle()
+                {
+                    Header = "bold",
+                },
+
+                // Omit OptionStyle to ensure coverage of at least one null style class
+            };
+
+            // Given
+            var fixture = new CommandAppTester();
+            fixture.SetDefaultCommand<LionCommand>();
+            fixture.Configure(configurator =>
+            {
+                configurator.SetApplicationName("myapp");
+                configurator.AddExample("20", "--alive");
+                configurator.AddCommand<GiraffeCommand>("giraffe");
+                configurator.Settings.HelpProviderStyles = styles;
+                configurator.SetHelpProvider(new RenderMarkupHelpProvider(configurator.Settings));
+            });
+
+            // When
+            var result = fixture.Run();
+
+            // Then
+            return Verifier.Verify(result.Output);
+        }
+
+        [Fact]
+        [Expectation("Default_Without_Args_Additional_Style_None")]
+        public Task Should_Output_Default_Command_And_Additional_Commands_When_Default_Command_Has_Required_Parameters_And_Is_Called_Without_Args_Style_None()
+        {
+            // Given
+            var fixture = new CommandAppTester();
+            fixture.SetDefaultCommand<LionCommand>();
+            fixture.Configure(configurator =>
+            {
+                configurator.SetApplicationName("myapp");
+                configurator.AddExample("20", "--alive");
+                configurator.AddCommand<GiraffeCommand>("giraffe");
+                configurator.Settings.HelpProviderStyles = null;
+                configurator.SetHelpProvider(new RenderMarkupHelpProvider(configurator.Settings));
             });
 
             // When
